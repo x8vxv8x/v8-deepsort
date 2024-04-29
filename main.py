@@ -1,4 +1,5 @@
 import cv2
+from deep_sort_pytorch.utils.parser import get_config
 from ultralytics import YOLO
 import math
 from deep_sort_realtime.deepsort_tracker import DeepSort
@@ -6,16 +7,16 @@ import time
 import os
 
 
-class ObjectDetection():
+class ObjectDetection:
 
     def __init__(self, capture, fps=10, conf_threshold=0.6):
         self.capture = capture
         self.fps = fps
         self.conf_threshold = conf_threshold
         self.model = self.load_model()
-        self.CLASS_NAMES_DICT = self.model.model.names
 
-    def load_model(self):
+    @staticmethod
+    def load_model():
         model = YOLO('best1.pt')
         model.fuse()
 
@@ -37,16 +38,17 @@ class ObjectDetection():
                 w, h = x2 - x1, y2 - y1
 
                 cls = int(box.cls[0])
-                currentClass = self.CLASS_NAMES_DICT[cls]
+                currentclass = self.CLASS_NAMES_DICT[cls]
 
                 conf = math.ceil(box.conf[0] * 100) / 100
 
                 if conf > self.conf_threshold:
-                    detections.append((([x1, y1, w, h]), conf, currentClass))
+                    detections.append((([x1, y1, w, h]), conf, currentclass))
 
         return detections, img
 
-    def track_detect(self, detections, img, tracker):
+    @staticmethod
+    def track_detect(detections, img, tracker):
         tracks = tracker.update_tracks(detections, frame=img)
 
         for track in tracks:
@@ -55,48 +57,36 @@ class ObjectDetection():
             track_id = track.track_id
             ltrb = track.to_ltrb()
 
-            bbox = ltrb
-
-            x1, y1, x2, y2 = bbox
-            x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-            w, h = x2 - x1, y2 - y1
+            x1, y1, x2, y2 = map(int, ltrb)
 
             cv2.putText(img, f'ID: {track_id}', (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 255), 2)
-
-        return img
 
     def __call__(self):
         cap = cv2.VideoCapture(self.capture)
         cap.set(cv2.CAP_PROP_FPS, self.fps)
         assert cap.isOpened()
-        tracker = DeepSort(max_age=5,
-                           n_init=2,
-                           nms_max_overlap=1.0,
-                           max_cosine_distance=0.3,
-                           nn_budget=None,
-                           override_track_class=None,
-                           embedder="mobilenet",
-                           half=True,
-                           bgr=True,
-                           embedder_gpu=True,
-                           embedder_model_name=None,
-                           embedder_wts=None,
-                           polygon=False,
-                           today=None)
+        cfg = get_config()
+        cfg.merge_from_file("deep_sort_pytorch/configs/deep_sort.yaml")
+        tracker = DeepSort(cfg.DEEPSORT.REID_CKPT,
+                           max_dist=cfg.DEEPSORT.MAX_DIST,
+                           min_confidence=cfg.DEEPSORT.MIN_CONFIDENCE,
+                           nms_max_overlap=cfg.DEEPSORT.NMS_MAX_OVERLAP,
+                           max_iou_distance=cfg.DEEPSORT.MAX_IOU_DISTANCE,
+                           max_age=cfg.DEEPSORT.MAX_AGE,
+                           n_init=cfg.DEEPSORT.N_INIT,
+                           nn_budget=cfg.DEEPSORT.NN_BUDGET,
+                           use_cuda=use_cuda)
 
-        # Get the width and height of the frame
-        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)   # float
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT) # float
+        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
-        # Define the codec and create a VideoWriter object
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        fourcc = cv2.VideoWriter.fourcc(*'XVID')
         if not os.path.exists('video_run'):
             os.makedirs('video_run')
         out = cv2.VideoWriter('video_run/output.mp4', fourcc, self.fps, (int(width), int(height)))
 
         prev_frame_time = 0
-        new_frame_time = 0
 
         while True:
             ret, img = cap.read()
@@ -105,7 +95,7 @@ class ObjectDetection():
                 break
 
             new_frame_time = time.time()
-            fps = 1/(new_frame_time-prev_frame_time)
+            fps = 1 / (new_frame_time - prev_frame_time)
             prev_frame_time = new_frame_time
             fps = int(fps)
             fps = str(fps)
@@ -131,7 +121,3 @@ class ObjectDetection():
 
 detector = ObjectDetection(capture='drone.mp4')  # input your video link
 detector()
-
-
-
-
