@@ -1,10 +1,12 @@
-import cv2
-from deep_sort_pytorch.utils.parser import get_config
-from ultralytics import YOLO
-import math
-from deep_sort_realtime.deepsort_tracker import DeepSort
-import time
 import os
+import time
+import cv2
+import math
+
+from ultralytics import YOLO
+from deep_sort_realtime.deepsort_tracker import DeepSort
+from deep_sort_pytorch.utils.parser import get_config
+from deep_sort_pytorch.deep_sort import DeepSort
 
 
 class ObjectDetection:
@@ -76,7 +78,7 @@ class ObjectDetection:
                            max_age=cfg.DEEPSORT.MAX_AGE,
                            n_init=cfg.DEEPSORT.N_INIT,
                            nn_budget=cfg.DEEPSORT.NN_BUDGET,
-                           use_cuda=use_cuda)
+                           use_cuda=True)
 
         width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
