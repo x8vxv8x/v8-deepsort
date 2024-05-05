@@ -135,4 +135,5 @@ __all__ = (
     "CBFuse",
     "CBLinear",
     "Silence",
+    "SKAttention"
 )

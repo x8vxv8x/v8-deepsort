@@ -907,6 +907,11 @@ def parse_model(d, ch, verbose=True):  # model_dict, input_channels(3)
             if m is HGBlock:
                 args.insert(4, n)  # number of repeats
                 n = 1
+        elif m is SKAttention:
+            c1, c2 = ch[f], args[0]
+            if c2 != nc:
+                c2 = make_divisible(min(c2,max_channels) * width, 8)
+            args = [c1, *args[1:]]
         elif m is ResNetLayer:
             c2 = args[1] if args[3] else args[1] * 4
         elif m is nn.BatchNorm2d:
