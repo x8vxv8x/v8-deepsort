@@ -16,7 +16,7 @@ class ObjectDetection:
         self.CLASS_NAMES_DICT = self.model.names
 
     def load_model(self):
-        model = YOLO('best1.pt')
+        model = YOLO('bestv9.pt')
         model.fuse()
 
         return model
