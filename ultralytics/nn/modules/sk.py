@@ -1,10 +1,8 @@
-import numpy as np
+from collections import OrderedDict
 import torch
 from torch import nn
-from torch.nn import init
-from collections import OrderedDict
- 
- 
+
+
 class SKAttention(nn.Module):
     #通道数channel, 卷积核尺度kernels, 降维系数reduction, 分组数group, 降维后的通道数L
     def __init__(self, channel=512, kernels=[1, 3, 5, 7], reduction=16, group=1, L=32):

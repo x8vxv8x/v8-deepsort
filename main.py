@@ -8,7 +8,7 @@ import os
 
 class ObjectDetection:
 
-    def __init__(self, capture, fps=10, conf_threshold=0.35):
+    def __init__(self, capture, fps=30, conf_threshold=0.3):
         self.capture = capture
         self.fps = fps
         self.conf_threshold = conf_threshold
