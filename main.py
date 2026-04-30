@@ -8,7 +8,7 @@ import os
 
 class ObjectDetection:
 
-    def __init__(self, capture, fps=30, conf_threshold=0.3):
+    def __init__(self, capture, fps=30, conf_threshold=0.7):
         self.capture = capture
         self.fps = fps
         self.conf_threshold = conf_threshold
@@ -16,7 +16,7 @@ class ObjectDetection:
         self.CLASS_NAMES_DICT = self.model.names
 
     def load_model(self):
-        model = YOLO('bestv9.pt')
+        model = YOLO('111.pt')
         model.fuse()
 
         return model
@@ -122,7 +122,7 @@ class ObjectDetection:
         cv2.destroyAllWindows()
 
 
-detector = ObjectDetection(capture='drone.mp4')  # input your video link
+detector = ObjectDetection(capture='drone3.mp4')  # input your video link
 detector()
 
 
